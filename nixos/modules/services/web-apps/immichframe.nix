@@ -24,6 +24,12 @@ in
       default = 3000;
       description = "The port that ImmichFrame will listen on.";
     };
+    host = mkOption {
+      type = types.str;
+      default = "127.0.0.1";
+      example = "0.0.0.0";
+      description = "The host/interface ImmichFrame will listen on.";
+    };
 
     settings = mkOption {
       type = types.submodule {
@@ -121,7 +127,7 @@ in
           '';
         };
         serviceConfig = {
-          ExecStart = "${lib.getExe cfg.package} --urls=http://localhost:${toString cfg.port}";
+          ExecStart = "${lib.getExe cfg.package} --urls=http://${cfg.host}:${toString cfg.port}";
           LoadCredential = lib.concatMapAttrsStringSep ":" (
             apiKeyFile: id: "${id}:${apiKeyFile}"
           ) apiKeyFileToId;
