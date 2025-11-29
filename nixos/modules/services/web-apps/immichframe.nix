@@ -31,6 +31,12 @@ in
       description = "The address to which ImmichFrame should bind.";
     };
 
+    openFirewall = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Whether to open the firewall for ImmichFrame.";
+    };
+
     settings = mkOption {
       type = types.submodule {
         freeformType = format.type;
@@ -90,6 +96,8 @@ in
   };
 
   config = mkIf cfg.enable {
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ cfg.port ];
+
     systemd.services.immichframe =
       let
         accountsWithApiKeyFiles = lib.filter (account: account.ApiKeyFile != null) cfg.settings.Accounts;
