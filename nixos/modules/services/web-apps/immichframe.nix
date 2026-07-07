@@ -25,6 +25,15 @@ in
       description = "The port that ImmichFrame will listen on.";
     };
 
+    bind = mkOption {
+      type = types.str;
+      default = "127.0.0.1";
+      example = "0.0.0.0";
+      description = "The address to which ImmichFrame should bind.";
+    };
+
+    openFirewall = mkEnableOption "opening the default ports in the firewall for ImmichFrame";
+
     settings = mkOption {
       type = types.submodule {
         freeformType = format.type;
@@ -89,6 +98,8 @@ in
       message = "Exactly one of {option}`services.immichframe.settings.Accounts[${toString i}].ApiKey` and {option}`services.immichframe.settings.Accounts[${toString i}].ApiKeyFile` must be specified";
     }) cfg.settings.Accounts;
 
+    networking.firewall.allowedTCPPorts = mkIf cfg.openFirewall [ cfg.port ];
+
     systemd.services.immichframe =
       let
         accountsWithApiKeyFiles = lib.filter (account: account.ApiKeyFile != null) cfg.settings.Accounts;
@@ -126,7 +137,7 @@ in
           '';
         };
         serviceConfig = {
-          ExecStart = "${lib.getExe cfg.package} --urls=http://localhost:${toString cfg.port}";
+          ExecStart = "${lib.getExe cfg.package} --urls=http://${cfg.bind}:${toString cfg.port}";
           LoadCredential = lib.concatMapAttrsStringSep ":" (
             apiKeyFile: id: "${id}:${apiKeyFile}"
           ) apiKeyFileToId;
